@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context.xsd">
+		
+	
+	<!-- mvc注解驱动 -->
+	<mvc:annotation-driven/>
+	
+	<!-- 开启spring mvc注解扫描 com.eyaoshun.activiti.oa.controller,com.eyaoshun.activiti.controller -->
+	<context:component-scan base-package="org.activiti.rest,com.eyaoshun.activiti.controller"/>
+	
+	<bean id="restResponseFactory" class="org.activiti.rest.service.api.RestResponseFactory" ></bean>
+	<bean id="contentTypeResolver" class="org.activiti.rest.common.application.DefaultContentTypeResolver"></bean>
+	<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"></bean>
+
+	<!-- Jsp视图 -->
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="order" value="1" />
+		<property name="prefix" value="/WEB-INF/views/" />
+		<property name="suffix" value=".jsp" />
+		<property name="contentType" value="text/html; charset=utf-8" />
+		<property name="viewClass" value="org.springframework.web.servlet.view.JstlView" />
+	</bean>
+
+	<!-- 跨域访问 -->
+	<mvc:cors>
+		<mvc:mapping path="/**" 
+			allowed-origins="*"
+			allowed-methods="GET,POST,OPTIONS" 
+			allowed-headers="header1, header2"
+			exposed-headers="header1, header2" 
+			allow-credentials="true"
+			max-age="3600" />
+	</mvc:cors>
+	
+	<!-- 线程池配置 -->
+    <bean id="threadPoolTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <!-- 线程池维护线程的最少数量 -->
+        <property name="corePoolSize" value="16"/>
+        <!--  线程池维护线程的最大数量，默认为Integer.MAX_VALUE -->
+        <property name="maxPoolSize" value="32"/>
+        <!-- 线程池所使用的缓冲队列，一般需要设置值>=notifyScheduledMainExecutor.maxNum；默认为Integer.MAX_VALUE -->
+        <property name="queueCapacity" value="20000"/>
+        <!-- 线程池维护线程所允许的空闲时间，默认为60s -->
+        <property name="keepAliveSeconds" value="300"/>
+        <!-- 线程池对拒绝任务（无线程可用）的处理策略，目前只支持AbortPolicy、CallerRunsPolicy；默认为后者 -->
+        <property name="rejectedExecutionHandler">
+            <!-- AbortPolicy:直接抛出java.util.concurrent.RejectedExecutionException异常 -->
+            <!-- CallerRunsPolicy:主线程直接执行该任务，执行完之后尝试添加下一个任务到线程池中，可以有效降低向线程池内添加任务的速度 -->
+            <!-- DiscardOldestPolicy:抛弃旧的任务、暂不支持；会导致被丢弃的任务无法再次被执行 -->
+            <!-- DiscardPolicy:抛弃当前任务、暂不支持；会导致被丢弃的任务无法再次被执行 -->
+            <bean class="java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy"/>
+        </property>
+    </bean>
+
+	<!-- 文件上传 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="104857600" /> <!-- 100m -->
+		<property name="maxInMemorySize" value="4096" />
+		<property name="defaultEncoding" value="UTF-8"></property>
+	</bean>
+	
+	<!-- 定义首页 -->
+	<mvc:view-controller path="/" view-name="redirect:/index" />   
+
+</beans>
